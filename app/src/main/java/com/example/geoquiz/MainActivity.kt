@@ -34,6 +34,9 @@ val questions = listOf(
     Question("Lake Baikal is the world's oldest and deepest freshwater lake.", true)
 )
 
+// ============================================================
+//  MAIN ACTIVITY
+// ============================================================
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,52 +51,94 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+// ============================================================
+//  UI
+// ============================================================
 @Composable
 fun QuizScreen(modifier: Modifier = Modifier) {
+    // Текущий индекс вопроса
     var currentIndex by remember { mutableIntStateOf(0) }
+
+    // Ответил ли пользователь на текущий вопрос
     var answered by remember { mutableStateOf(false) }
-    var isCorrect by remember { mutableStateOf(false) }
+
+    // Количество правильных ответов
     var correctCount by remember { mutableIntStateOf(0) }
+
+    // Показывать ли финальное окно
     var showResult by remember { mutableStateOf(false) }
 
     val currentQuestion = questions[currentIndex]
     val isLastQuestion = currentIndex == questions.lastIndex
 
     Column(
-        modifier = modifier.fillMaxSize().padding(24.dp),
+        modifier = modifier
+            .fillMaxSize()
+            .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("Вопрос ${currentIndex + 1} из ${questions.size}", fontSize = 14.sp)
-        Spacer(Modifier.height(16.dp))
+        // Номер вопроса
+        Text(
+            "Вопрос ${currentIndex + 1} из ${questions.size}",
+            fontSize = 16.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
 
-        Text(currentQuestion.text, fontSize = 22.sp, textAlign = TextAlign.Center)
+        Spacer(Modifier.height(24.dp))
+
+        // Текст вопроса
+        Text(
+            currentQuestion.text,
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Medium,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
+
         Spacer(Modifier.height(32.dp))
 
+        // Кнопки True / False — видны, пока не ответили
         if (!answered) {
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Button(onClick = {
-                    answered = true
-                    isCorrect = currentQuestion.answer
-                    if (isCorrect) correctCount++
-                }, modifier = Modifier.weight(1f)) { Text("True") }
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Button(
+                    onClick = {
+                        answered = true
+                        if (currentQuestion.answer) correctCount++
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("True")
+                }
 
-                Button(onClick = {
-                    answered = true
-                    isCorrect = !currentQuestion.answer
-                    if (isCorrect) correctCount++
-                }, modifier = Modifier.weight(1f)) { Text("False") }
+                Button(
+                    onClick = {
+                        answered = true
+                        if (!currentQuestion.answer) correctCount++
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("False")
+                }
             }
         } else {
+            // После ответа показываем результат по вопросу
             Text(
-                if (isCorrect) "✅ Верно!" else "❌ Неверно",
-                color = if (isCorrect) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-                fontWeight = FontWeight.Bold
+                text = if (
+                    (currentQuestion.answer && correctCount > 0) ||
+                    (!currentQuestion.answer)
+                ) "Ответ принят" else "Ответ принят",
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.primary
             )
         }
 
         Spacer(Modifier.height(24.dp))
 
+        // Кнопка Next — скрыта на последнем вопросе
         if (!isLastQuestion) {
             Button(
                 onClick = {
@@ -102,32 +147,48 @@ fun QuizScreen(modifier: Modifier = Modifier) {
                 },
                 enabled = answered,
                 modifier = Modifier.fillMaxWidth()
-            ) { Text("Next") }
+            ) {
+                Text("Next")
+            }
         }
     }
 
-    // Всплывающая панель (AlertDialog)
+    // Финальное окно с результатом
     if (showResult) {
         AlertDialog(
             onDismissRequest = { showResult = false },
             title = { Text("Тест завершён") },
-            text = { Text("Правильных ответов: $correctCount из ${questions.size}") },
+            text = {
+                Text("Правильных ответов: $correctCount из ${questions.size}")
+            },
             confirmButton = {
                 TextButton(onClick = {
+                    // Сброс теста
                     currentIndex = 0
                     answered = false
                     correctCount = 0
                     showResult = false
-                }) { Text("Заново") }
+                }) {
+                    Text("Заново")
+                }
             }
         )
     }
 
-    // Показ диалога после ответа на последний вопрос
-    LaunchedEffect(answered, isLastQuestion) {
+    // Проверяем, не пора ли показать результат
+    LaunchedEffect(answered) {
         if (answered && isLastQuestion) {
-            kotlinx.coroutines.delay(1000) // небольшая задержка, чтобы юзер увидел "Верно/Неверно"
             showResult = true
+        }
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun QuizScreenPreview() {
+    GeoQuizTheme {
+        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+            QuizScreen(modifier = Modifier.padding(innerPadding))
         }
     }
 }
