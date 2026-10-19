@@ -34,9 +34,6 @@ val questions = listOf(
     Question("Lake Baikal is the world's oldest and deepest freshwater lake.", true)
 )
 
-// ============================================================
-//  MAIN ACTIVITY
-// ============================================================
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,6 +45,23 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+}
+
+@Composable
+fun QuizScreen(modifier: Modifier = Modifier) {
+    val currentQuestion = questions[0] // Пока жестко первый вопрос
+
+    Column(
+        modifier = modifier.fillMaxSize().padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            currentQuestion.text,
+            fontSize = 22.sp,
+            textAlign = TextAlign.Center
+        )
     }
 }
 
