@@ -50,8 +50,11 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun QuizScreen(modifier: Modifier = Modifier) {
-    val currentQuestion = questions[0]
+    var currentIndex by remember { mutableIntStateOf(0) }
     var answered by remember { mutableStateOf(false) }
+
+    val currentQuestion = questions[currentIndex]
+    val isLastQuestion = currentIndex == questions.lastIndex
 
     Column(
         modifier = modifier.fillMaxSize().padding(24.dp),
@@ -61,11 +64,26 @@ fun QuizScreen(modifier: Modifier = Modifier) {
         Text(currentQuestion.text, fontSize = 22.sp, textAlign = TextAlign.Center)
         Spacer(Modifier.height(32.dp))
 
-        // Требование 2: скрываем кнопки после ответа
+        // Кнопки True/False
         if (!answered) {
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Button(onClick = { answered = true }) { Text("True") }
                 Button(onClick = { answered = true }) { Text("False") }
+            }
+        }
+
+        Spacer(Modifier.height(24.dp))
+
+        // Требование 3: скрываем Next на последнем вопросе
+        if (!isLastQuestion) {
+            Button(
+                onClick = {
+                    currentIndex++
+                    answered = false
+                },
+                enabled = answered // Активна только после ответа
+            ) {
+                Text("Next")
             }
         }
     }
