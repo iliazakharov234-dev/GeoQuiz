@@ -52,6 +52,9 @@ class MainActivity : ComponentActivity() {
 fun QuizScreen(modifier: Modifier = Modifier) {
     var currentIndex by remember { mutableIntStateOf(0) }
     var answered by remember { mutableStateOf(false) }
+    var isCorrect by remember { mutableStateOf(false) }
+    var correctCount by remember { mutableIntStateOf(0) }
+    var showResult by remember { mutableStateOf(false) }
 
     val currentQuestion = questions[currentIndex]
     val isLastQuestion = currentIndex == questions.lastIndex
@@ -61,30 +64,70 @@ fun QuizScreen(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        Text("Вопрос ${currentIndex + 1} из ${questions.size}", fontSize = 14.sp)
+        Spacer(Modifier.height(16.dp))
+
         Text(currentQuestion.text, fontSize = 22.sp, textAlign = TextAlign.Center)
         Spacer(Modifier.height(32.dp))
 
-        // Кнопки True/False
         if (!answered) {
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Button(onClick = { answered = true }) { Text("True") }
-                Button(onClick = { answered = true }) { Text("False") }
+                Button(onClick = {
+                    answered = true
+                    isCorrect = currentQuestion.answer
+                    if (isCorrect) correctCount++
+                }, modifier = Modifier.weight(1f)) { Text("True") }
+
+                Button(onClick = {
+                    answered = true
+                    isCorrect = !currentQuestion.answer
+                    if (isCorrect) correctCount++
+                }, modifier = Modifier.weight(1f)) { Text("False") }
             }
+        } else {
+            Text(
+                if (isCorrect) "✅ Верно!" else "❌ Неверно",
+                color = if (isCorrect) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                fontWeight = FontWeight.Bold
+            )
         }
 
         Spacer(Modifier.height(24.dp))
 
-        // Требование 3: скрываем Next на последнем вопросе
         if (!isLastQuestion) {
             Button(
                 onClick = {
                     currentIndex++
                     answered = false
                 },
-                enabled = answered // Активна только после ответа
-            ) {
-                Text("Next")
+                enabled = answered,
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("Next") }
+        }
+    }
+
+    // Всплывающая панель (AlertDialog)
+    if (showResult) {
+        AlertDialog(
+            onDismissRequest = { showResult = false },
+            title = { Text("Тест завершён") },
+            text = { Text("Правильных ответов: $correctCount из ${questions.size}") },
+            confirmButton = {
+                TextButton(onClick = {
+                    currentIndex = 0
+                    answered = false
+                    correctCount = 0
+                    showResult = false
+                }) { Text("Заново") }
             }
+        )
+    }
+
+    // Показ диалога после ответа на последний вопрос
+    LaunchedEffect(answered, isLastQuestion) {
+        if (answered && isLastQuestion) {
+            kotlinx.coroutines.delay(1000) // небольшая задержка, чтобы юзер увидел "Верно/Неверно"
+            showResult = true
         }
     }
 }
