@@ -50,18 +50,23 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun QuizScreen(modifier: Modifier = Modifier) {
-    val currentQuestion = questions[0] // Пока жестко первый вопрос
+    val currentQuestion = questions[0]
+    var answered by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier.fillMaxSize().padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(
-            currentQuestion.text,
-            fontSize = 22.sp,
-            textAlign = TextAlign.Center
-        )
+        Text(currentQuestion.text, fontSize = 22.sp, textAlign = TextAlign.Center)
+        Spacer(Modifier.height(32.dp))
+
+        // Требование 2: скрываем кнопки после ответа
+        if (!answered) {
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Button(onClick = { answered = true }) { Text("True") }
+                Button(onClick = { answered = true }) { Text("False") }
+            }
+        }
     }
 }
-
